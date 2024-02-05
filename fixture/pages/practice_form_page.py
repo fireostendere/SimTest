@@ -1,7 +1,7 @@
 import sys
 from selenium.webdriver import Keys
 from selenium.webdriver.common.by import By
-
+import json
 
 class PracticeFormPage:
     # Локаторы элементов страницы
@@ -44,7 +44,7 @@ class PracticeFormPage:
         self.enter_text(self._MOBILE, data['Mobile'])
         self.select_date_of_birth(data['Date of Birth'])
         self.enter_subjects(data['Subjects'])
-        wd.find_element(*self._PICTURE_BTN).send_keys(f"{sys.path[0]}/src/{data['Picture']}")
+        wd.find_element(*self._PICTURE_BTN).send_keys(f"{sys.path[0]}/data/{data['Picture']}")
         self.enter_text(self._CURRENT_ADDRES, data['Address'])
         self.select_state_city(data['State and City'])
         wd.find_element(*self._SUBNIT_BTN).click()
