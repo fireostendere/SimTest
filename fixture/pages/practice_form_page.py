@@ -1,7 +1,8 @@
 import sys
+import allure
 from selenium.webdriver import Keys
 from selenium.webdriver.common.by import By
-import json
+
 
 class PracticeFormPage:
     # Локаторы элементов страницы
@@ -25,6 +26,9 @@ class PracticeFormPage:
     _SUBNIT_BTN = (By.XPATH, '//div/button')
     _THANK_FOR_SUBMITING_TXT = (By.ID, 'example-modal-sizes-title-lg')
     _TABLE = (By.XPATH, '/html/body/div[4]/div/div/div[2]/div/table')
+    _TABLE_CLOSE_BTN = (By.ID, 'closeLargeModal')
+    _ROWS = (By.CSS_SELECTOR, 'tr')
+    _CELLS = (By.CSS_SELECTOR, 'td')
 
     def __init__(self, app):
         self.wd = app.wd
@@ -33,6 +37,7 @@ class PracticeFormPage:
     def open_site(self):
         self.wd.maximize_window()
 
+    @allure.step("Заполнение и отправление формы")
     def fill_and_submit_form(self, data):
         """Заполняет форму данными и отправляет ее."""
         f_name, l_name = data['Student Name'].split()
@@ -49,6 +54,7 @@ class PracticeFormPage:
         self.select_state_city(data['State and City'])
         wd.find_element(*self._SUBNIT_BTN).click()
 
+    @allure.step("Заполнение даты рождения")
     def select_date_of_birth(self, date_of_birth):
         """Выбирает дату рождения из календаря."""
         date_of_birth = date_of_birth.replace(',', ' ').split()
@@ -65,15 +71,18 @@ class PracticeFormPage:
                                      f"text() = '{date_of_birth[0]}']")
         day_option.click()
 
+    @allure.step("Выбор пола")
     def select_gender(self, gender):
         """Выбирает пол студента."""
+        wd = self.app.wd
         if gender == 'Male':
-            self.wd.find_element(*self._GENDER_MALE).click()
+            wd.find_element(*self._GENDER_MALE).click()
         elif gender == 'Female':
-            self.wd.find_element(*self._GENDER_FEMALE).click()
+            wd.find_element(*self._GENDER_FEMALE).click()
         else:
-            self.wd.find_element(*self._GENDER_OTHER).click()
+            wd.find_element(*self._GENDER_OTHER).click()
 
+    @allure.step("Выбор штата и города")
     def select_state_city(self, state_and_city):
         """Выбирает штат и город проживания студента."""
         wd = self.app.wd
@@ -83,36 +92,47 @@ class PracticeFormPage:
         wd.find_element(*self._DROPDOWN_CITY).click()
         wd.find_element(By.XPATH, f"//*[contains(text(), '{state_and_city[1]}')]").click()
 
+    @allure.step("Выбор предметов")
     def enter_subjects(self, subjects):
         """Выбирает предметы, которые изучает студент."""
+        wd = self.app.wd
         subjects = subjects.replace(',', '').split()
-        subject = self.wd.find_element(*self._SUBJECTS_FIELD)
-        subject_input = self.wd.find_element(*self._SUBJECTS_INPUTS)
+        subject = wd.find_element(*self._SUBJECTS_FIELD)
+        subject_input = wd.find_element(*self._SUBJECTS_INPUTS)
         subject.click()
         for i in range(len(subjects)):
             subject_input.send_keys(subjects[i])
             subject_input.send_keys(Keys.ENTER)
 
+    @allure.step("Ввод текста")
     def enter_text(self, locator, text):
         """Вводит текст в указанное поле."""
-        element = self.wd.find_element(*locator)
+        wd = self.app.wd
+        element = wd.find_element(*locator)
         element.clear()
         element.send_keys(text)
 
+    @allure.step("Получение текста элемента")
     def get_inner_text(self):
         """Возвращает текст элемента благодарности после отправки формы."""
-        element = self.wd.find_element(*self._THANK_FOR_SUBMITING_TXT)
+        wd = self.app.wd
+        element = wd.find_element(*self._THANK_FOR_SUBMITING_TXT)
         return element.text
 
-    def get_table(self):
+    @allure.step("Полчение данных из таблицы")
+    def get_table_and_close_table(self):
         """Возвращает данные из таблицы на странице."""
         wd = self.app.wd
         table_data = {}
-        rows = wd.find_elements(By.CSS_SELECTOR, 'tr')
+        rows = wd.find_elements(*self._ROWS)
         for row in rows:
-            cells = row.find_elements(By.CSS_SELECTOR, 'td')
+            cells = row.find_elements(*self._CELLS)
             if len(cells) == 2:
                 key = cells[0].text.strip()
                 value = cells[1].text.strip()
                 table_data[key] = value
+                if key == "State and City":
+                    break
+        allure.attach(str(table_data), name="Table", attachment_type=allure.attachment_type.TEXT)
+        wd.find_element(*self._TABLE_CLOSE_BTN).click()
         return table_data
