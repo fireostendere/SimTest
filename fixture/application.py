@@ -8,7 +8,7 @@ from fixture.pages.practice_form_page import PracticeFormPage
 class Application:
     def __init__(self):
         self.wd = webdriver.Chrome()
-        self.wd.implicitly_wait(2)
+        self.wd.implicitly_wait(5)
         self.base_url = 'https://demoqa.com/automation-practice-form'
         self.practice_form_page = None
 
